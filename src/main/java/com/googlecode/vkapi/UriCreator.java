@@ -106,6 +106,12 @@ class UriCreator {
                 "fields=" + "members_count" + "&" +
                 "access_token=" + authToken.getAccessToken();
     }
+    public String groupInfo(String groupId, OAuthToken authToken) {
+        return METHOD_URI + "groups.getById?" +
+                "group_id=" + groupId + "&" +
+                "fields=" + "members_count" + "&" +
+                "access_token=" + authToken.getAccessToken();
+    }
 
     public String groupUsers(long groupId, int count, int offset, OAuthToken authToken) {
         return METHOD_URI + "groups.getMembers?" + 
@@ -120,6 +126,7 @@ class UriCreator {
                 "user_id="+userId+"&"+
                 "count=" + count + "&" +
                 "offset=" + offset + "&" +
+                "fields=members_count&"+
                 "extended=1&"+
                 "access_token=" + authToken.getAccessToken();
     }

@@ -97,7 +97,7 @@ public class JsonConverter {
         return result;
     }
     public int jsonToWallCount(String json){
-        logger.debug("jsonToWallCount: processing {}...", json);
+        //logger.debug("jsonToWallCount: processing {}...", json);
         Iterator<JsonNode> elements = getRootResponseArray(json);
 
         return elements.next().getIntValue();

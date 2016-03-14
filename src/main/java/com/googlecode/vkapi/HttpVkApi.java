@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
@@ -153,7 +154,7 @@ public class HttpVkApi implements VkApi {
         ExecutorService es = Executors.newFixedThreadPool(num_threads);
         int postCount = getPostCount(domain, authToken);
 
-        for(int offset=0;offset<postCount;offset+=step){
+        for(int offset=0;offset<Math.min(limit,postCount);offset+=step){
             es.submit(new Worker(domain, filter, authToken, list, step, offset,postCount));
         }
 
@@ -193,13 +194,27 @@ public class HttpVkApi implements VkApi {
         List<VkGroup> result = jsonConverter.jsonToVkGroups(json);
         return firstOrNull(result);
     }
+    public VkGroup groupInfo(String domain, OAuthToken authToken) throws VkException {
+        String uri = uriCreator.groupInfo(domain, authToken);
+        String json = executeAndProcess(uri, authToken);
+        List<VkGroup> result = jsonConverter.jsonToVkGroups(json);
+        return firstOrNull(result);
+    }
 
     public Collection<VkGroup> groupsOfUser(long userId, OAuthToken authToken) throws VkException {
         int count = 1000, offset = 0;
         //int total = userInfo((int) userId,authToken).;
-        String uri = uriCreator.groupList(userId, authToken);
-        String json = executeAndProcess(uri, authToken);
-        return jsonConverter.jsonToVkGroups(json);
+        Collection<VkGroup> out=new ArrayList<>();
+        Collection<VkGroup> add;
+
+        do {
+            String uri = uriCreator.groupList(userId, count, offset, authToken);
+            String json = executeAndProcess(uri, authToken);
+            add= jsonConverter.jsonToVkGroups(json);
+            out.addAll(add);
+            offset+=count;
+        }while (add.size()!=0);
+        return out;
     }
 
     //@Override
