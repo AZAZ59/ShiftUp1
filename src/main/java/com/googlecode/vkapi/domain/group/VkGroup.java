@@ -1,5 +1,11 @@
 package com.googlecode.vkapi.domain.group;
 
+import com.googlecode.vkapi.VkApi;
+import com.googlecode.vkapi.domain.VkOAuthToken;
+import com.googlecode.vkapi.exceptions.VkException;
+
+import java.util.Collection;
+
 /**
  * VK.com group with all group related information. Immutable.
  * 
@@ -16,6 +22,18 @@ public class VkGroup {
     private final String photoMedium;
     private final String photoBig;
     private final long membersCount;
+    private Collection<Integer> members=null;
+
+    public Collection<Integer> getMembers(VkApi vkApi, VkOAuthToken tok) {
+        if(members==null){
+            try {
+                members=vkApi.groupUsers(groupId,tok);
+            } catch (VkException e) {
+                e.printStackTrace();
+            }
+        }
+        return members;
+    }
 
     public VkGroup(VkGroupBuilder vkGroupBuilder) {
         groupId = vkGroupBuilder.getGroupId();
