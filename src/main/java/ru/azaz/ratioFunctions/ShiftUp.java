@@ -1,36 +1,25 @@
-package ru.azaz.vkGetter;
+package ru.azaz.ratioFunctions;
 
 import com.googlecode.vkapi.HttpVkApi;
 import com.googlecode.vkapi.domain.VkOAuthToken;
 import com.googlecode.vkapi.domain.group.VkGroup;
 import com.googlecode.vkapi.exceptions.VkException;
 import com.sun.org.apache.xpath.internal.SourceTree;
+import ru.azaz.VkFile;
+import ru.azaz.utils.Intersection;
+import ru.azaz.vkGetter.Tuple;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Created by AZAZ on 09.03.2016.
  */
-public class ShiftUp {
-    HttpVkApi vkApi;
-    VkOAuthToken tok;
-    int threadCount=20;
-    public ShiftUp(HttpVkApi vkApi, VkOAuthToken tok) {
-        this.vkApi = vkApi;
-        this.tok = tok;
-    }
-    public ShiftUp(HttpVkApi vkApi, VkOAuthToken tok,int threadCount) {
-        this.vkApi = vkApi;
-        this.tok = tok;
-        this.threadCount=threadCount;
-    }
-
-    public ShiftUp() {
-    }
+public class ShiftUp extends VkFile implements RatioFunction {
+    FutureTask<Map<VkGroup, Integer>> map;
 
     Tuple<Map<VkGroup, Integer>, Integer> numOfIntersectGroup(long grid, int limit) {
         Map<VkGroup, Integer> ans = Collections.synchronizedMap(new HashMap<VkGroup, Integer>());
@@ -48,7 +37,6 @@ public class ShiftUp {
                 es.submit((Runnable) () -> {
                     try {
                         int t=i.addAndGet(1);
-                        //System.out.println("start Analize "+memberId +" "+(t)+" from "+members.size());
                         Collection<VkGroup> groups=vkApi.groupsOfUser(memberId, tok);
                         if(groups.size()>0){
                             groups.forEach(group -> {
@@ -57,7 +45,6 @@ public class ShiftUp {
                             });
                             count.incrementAndGet();
                         }
-                        //System.out.println("end Analize "+memberId +" "+t+" from "+members.size());
                     } catch (VkException e) {
                         e.printStackTrace();
                     }
@@ -90,4 +77,14 @@ public class ShiftUp {
         return numOfIntersectGroup(group,-1);
     }
 
+    @Override
+    public Future<Double> apply(VkGroup group, VkGroup group2) {
+        return new FutureTask<>(() -> (double) Intersection.intersect(group.getMembers(vkApi, tok), group2.getMembers(vkApi, tok)).size());
+    }
+
+    @Override
+    public void init(VkGroup group) {
+        map=new  FutureTask<>(() ->numOfIntersectGroup(group.getGroupId()).val1);
+        map.run();
+    }
 }

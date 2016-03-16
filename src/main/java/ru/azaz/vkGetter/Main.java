@@ -1,38 +1,17 @@
 package ru.azaz.vkGetter;
 
 import com.googlecode.vkapi.HttpVkApi;
-import com.googlecode.vkapi.WallFiler;
 import com.googlecode.vkapi.domain.VkOAuthToken;
 import com.googlecode.vkapi.domain.group.VkGroup;
-import com.googlecode.vkapi.domain.message.VkWallMessage;
 import com.googlecode.vkapi.exceptions.VkException;
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import ru.stachek66.nlp.mystem.holding.Factory;
-import ru.stachek66.nlp.mystem.holding.MyStem;
-import ru.stachek66.nlp.mystem.holding.MyStemApplicationException;
-import ru.stachek66.nlp.mystem.holding.Request;
-import ru.stachek66.nlp.mystem.model.Info;
-import scala.Option;
-import scala.collection.JavaConversions;
+import ru.azaz.ratioFunctions.ShiftUp;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 public class Main {
@@ -43,10 +22,11 @@ public class Main {
 
         String group1 = "jablog";
 
-        ShiftUp sf = new ShiftUp(vkApi, tok);
-        LexAnalyzer lex = new LexAnalyzer(vkApi, tok);
+        //ShiftUp sf = new ShiftUp(vkApi, tok);
+        //LexAnalyzer lex = new LexAnalyzer(vkApi, tok);
 
-        Future<TreeSet<Tuple<String, Double>>> lexMainGroup = lex.asyncGetAndAnalize(group1, 500);
+
+        /*Future<TreeSet<Tuple<String, Double>>> lexMainGroup = lex.asyncGetAndAnalize(group1, 500);
         Set<TreeSet<Tuple<String, Double>>> lexOtherGroups = Collections.synchronizedSet(new HashSet<>());
         ExecutorService ess = Executors.newFixedThreadPool(20);
 
@@ -81,6 +61,7 @@ public class Main {
         TreeSet<Tuple<String, Double>> maxIntersect = null;
         Double maxGrid = 0.;
 
+        ArrayList<Tuple<TreeSet<Tuple<String, Double>>,Integer>> intersects=new ArrayList<>();
 
         for (TreeSet<Tuple<String, Double>> tuples : lexOtherGroups) {
             TreeSet<Tuple<String, Double>> curIntersect =
@@ -94,6 +75,7 @@ public class Main {
                                     )
                             , mainLexMap
                     );
+            intersects.add(new Tuple<>(curIntersect,curIntersect.size()));
             if (curIntersect.size() > max) {
                 maxIntersect = curIntersect;
                 max = curIntersect.size();
@@ -101,10 +83,18 @@ public class Main {
             }
         }
 
+        Collections.sort(intersects);
+
+
         System.out.println("maxIntersect = " + maxIntersect);
-        System.out.println("=================================");
         System.out.println("max =" + max);
         System.out.println("maxGrid=" + maxGrid);
+        System.out.println("=================================");
+        intersects.forEach(t->{
+            System.out.println(t.val1);
+            System.out.println(t.val2);
+            System.out.println("=================================");
+        });
 
         return;
         /*analyzeAllGroupOfPeople(id, vkApi, tok);
@@ -196,6 +186,11 @@ public class Main {
         map1.forEach((s, aDouble) -> {
             if (map2.containsKey(s)) {
                 rs.add(new Tuple(s, (map2.get(s) + aDouble) / 2));
+            }
+        });
+        map2.forEach((s, aDouble) -> {
+            if (map1.containsKey(s)) {
+                rs.add(new Tuple(s, (map1.get(s) + aDouble) / 2));
             }
         });
         return rs;
